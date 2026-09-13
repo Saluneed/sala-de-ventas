@@ -35,8 +35,7 @@ export default function Chat() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const sendMessage = async (e: React.FormEvent) => {
+    const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading || !token) return;
 
@@ -86,9 +85,8 @@ export default function Chat() {
   };
 
   if (!token || !user) return <div>Cargando...</div>;
-
-  return (
-        <div className="h-screen flex flex-col bg-slate-900">
+    return (
+    <div className="h-screen flex flex-col bg-slate-900">
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Sala de ventas</h1>
@@ -113,4 +111,62 @@ export default function Chat() {
             <div>
               <p className="text-lg mb-2">
                 {mode === 'practica' 
-                  ?
+                  ? 'Con que perfil queres practicar hoy?'
+                  : 'Contame en que conversacion estas trabado'}
+              </p>
+              <p className="text-sm">Escribi un mensaje para comenzar</p>
+            </div>
+          </div>
+        )}
+
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                msg.role === 'user'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-slate-700 text-slate-100 border border-slate-600'
+              }`}
+            >
+              <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-slate-700 text-slate-400 px-4 py-2 rounded-lg text-sm">
+              {mode === 'practica' ? 'El afiliado esta escribiendo...' : 'Pensando...'}
+            </div>
+          </div>
+        )}
+
+        <div ref={chatEndRef} />
+      </div>
+            <div className="bg-slate-800 border-t border-slate-700 px-6 py-4">
+        <form onSubmit={sendMessage} className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+            placeholder={mode === 'practica' 
+              ? 'Escribi tu respuesta...' 
+              : 'Describí la situacion o pegá el texto...'}
+            className="flex-1 bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded font-semibold"
+          >
+            {loading ? '...' : 'Enviar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
