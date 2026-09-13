@@ -14,8 +14,7 @@ export default function Chat() {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
+    useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
 
@@ -35,15 +34,15 @@ export default function Chat() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-    const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || loading || !token) return;
 
     const userMessage = input;
     setInput('');
     setLoading(true);
-
-    try {
+        try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -77,15 +76,15 @@ export default function Chat() {
       setLoading(false);
     }
   };
-
-  const logout = () => {
+    const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/');
   };
 
   if (!token || !user) return <div>Cargando...</div>;
-    return (
+
+  return (
     <div className="h-screen flex flex-col bg-slate-900">
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
         <div>
@@ -118,8 +117,7 @@ export default function Chat() {
             </div>
           </div>
         )}
-
-        {messages.map((msg, idx) => (
+                {messages.map((msg, idx) => (
           <div
             key={idx}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -129,7 +127,24 @@ export default function Chat() {
                 msg.role === 'user'
                   ? 'bg-amber-600 text-white'
                   : 'bg-slate-700 text-slate-100 border border-slate-600'
-                        <div className="bg-slate-800 border-t border-slate-700 px-6 py-4">
+              }`}
+            >
+              <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-slate-700 text-slate-400 px-4 py-2 rounded-lg text-sm">
+              {mode === 'practica' ? 'El afiliado esta escribiendo...' : 'Pensando...'}
+            </div>
+          </div>
+        )}
+
+        <div ref={chatEndRef} />
+      </div>
+            <div className="bg-slate-800 border-t border-slate-700 px-6 py-4">
         <form onSubmit={sendMessage} className="flex gap-2">
           <input
             type="text"
