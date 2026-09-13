@@ -1,65 +1,116 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function Login() {
+export default function Chat() {
   const router = useRouter();
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode') || 'practica';
+  
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState('');
+  const [conversationId, setConversationId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string>('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    if (!savedToken || !savedUser) {
+      router.push('/');
+      return;
+    }
+
+    setToken(savedToken);
+    setUser(JSON.parse(savedUser));
+
+    if (mode === 'vendedor' && !JSON.parse(savedUser).modeUnlocked) {
+      router.push('/chat?mode=practica');
+    }
+  }, [router, mode]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    if (!input.trim() || loading || !token) return;
+
+    const userMessage = input;
+    setInput('');
     setLoading(true);
+
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name: isRegister ? name : undefined, register: isRegister })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          conversationId,
+          message: userMessage,
+          mode
+        })
       });
+
       const data = await response.json();
+
       if (!response.ok) {
-        setError(data.error || 'Error');
+        alert(data.error || 'Error al enviar mensaje');
         return;
       }
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      router.push('/chat?mode=practica');
-    } catch (err) {
-      setError('Error de conexion');
+
+      setConversationId(data.conversationId);
+      setMessages([
+        ...messages,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: data.response }
+      ]);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexion');
     } finally {
       setLoading(false);
     }
   };
-    return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-8 w-full max-w-md border border-slate-700">
-        <h1 className="text-3xl font-bold text-white mb-2">Sala de ventas</h1>
-        <p className="text-slate-400 mb-8">Simulador de practica</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegister && (
-            <div>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white" required />
-            </div>
-          )}
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white" required />
-          {error && <div className="bg-red-500 text-white px-3 py-2 rounded text-sm">{error}</div>}
-          <button type="submit" disabled={loading} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded">
-            {loading ? 'Cargando...' : isRegister ? 'Registrarse' : 'Entrar'}
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
+
+  if (!token || !user) return <div>Cargando...</div>;
+
+  return (
+        <div className="h-screen flex flex-col bg-slate-900">
+      <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Sala de ventas</h1>
+          <p className="text-sm text-slate-400">
+            Modo: <span className="font-semibold text-amber-500 capitalize">{mode}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-slate-300">{user.name}</span>
+          <button
+            onClick={logout}
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+          >
+            Salir
           </button>
-        </form>
-        <p className="mt-6 text-center text-slate-400 text-sm">
-          {isRegister ? 'Ya tenias cuenta?' : 'No tenias cuenta?'}
-          <button onClick={() => setIsRegister(!isRegister)} className="text-amber-500 ml-1 font-semibold">
-            {isRegister ? 'Entrar' : 'Registrarse'}
-          </button>
-        </p>
+        </div>
       </div>
-    </div>
-  );
-}
+
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-center text-slate-400">
+            <div>
+              <p className="text-lg mb-2">
+                {mode === 'practica' 
+                  ?
