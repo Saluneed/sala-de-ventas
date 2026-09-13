@@ -3,7 +3,7 @@ import { Pool, QueryResult } from 'pg';
 // Crear pool con configuración optimizada para serverless
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false },
+ssl: { rejectUnauthorized: false },
   // Configuración optimizada para serverless
   max: 1, // Máximo 1 conexión por instancia
   min: 0,
