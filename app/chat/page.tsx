@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 export default function Login() {
   const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
@@ -10,7 +9,6 @@ export default function Login() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -35,7 +33,7 @@ export default function Login() {
       setLoading(false);
     }
   };
-    return (
+  return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="bg-slate-800 rounded-lg shadow-xl p-8 w-full max-w-md border border-slate-700">
         <h1 className="text-3xl font-bold text-white mb-2">Sala de ventas</h1>
