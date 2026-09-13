@@ -1,3 +1,4 @@
+// Webhook test - reconnection verification
 import { Pool, QueryResult } from 'pg';
 
 // Crear pool con configuración optimizada para serverless
