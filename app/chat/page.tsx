@@ -128,7 +128,7 @@ export default function Chat() {
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 msg.role === 'user'
                   ? 'bg-amber-600 text-white'
-                  : 'bg-slate-700
+                  : 'bg-slate-700 text-slate-100 border border-slate-600'
                         <div className="bg-slate-800 border-t border-slate-700 px-6 py-4">
         <form onSubmit={sendMessage} className="flex gap-2">
           <input
