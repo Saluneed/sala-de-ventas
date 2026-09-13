@@ -4,6 +4,15 @@ import { comparePassword, generateToken, hashPassword } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validar que DATABASE_URL esté disponible
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL no está configurado');
+      return NextResponse.json(
+        { error: 'Configuración del servidor incompleta' },
+        { status: 500 }
+      );
+    }
+
     const { email, password, name, register } = await request.json();
 
     if (!email || !password) {
@@ -70,6 +79,17 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Auth error:', error);
+
+    // Diferenciar errores de conexión vs otros errores
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('timeout') || errorMessage.includes('network')) {
+      return NextResponse.json(
+        { error: 'Error de conexión a la base de datos' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

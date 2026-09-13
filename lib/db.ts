@@ -1,8 +1,19 @@
 import { Pool, QueryResult } from 'pg';
 
+// Crear pool con configuración optimizada para serverless
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false },
+  // Configuración optimizada para serverless
+  max: 1, // Máximo 1 conexión por instancia
+  min: 0,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000, // 10 segundos de timeout
+});
+
+// Manejo de errores del pool
+pool.on('error', (err) => {
+  console.error('Pool error:', err);
 });
 
 export async function query(text: string, params?: any[]): Promise<QueryResult> {
