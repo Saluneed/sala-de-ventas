@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       role: 'user',
       content: [
         { type: 'text', text: message },
-        ...(imageData ? [{ type: 'image', source: { type: 'base64', media_type: imageData.mediaType, data: imageData.data } }] : [])
+        ...(imageData ? [{ type: 'image' as const, source: { type: 'base64' as const, media_type: imageData.mediaType, data: imageData.data } }] : [])
       ]
     });
 
