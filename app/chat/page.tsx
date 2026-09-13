@@ -1,9 +1,9 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function Chat() {
+function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode') || 'practica';
@@ -167,5 +167,13 @@ export default function Chat() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function Chat() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }
