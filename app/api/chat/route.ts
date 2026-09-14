@@ -23,8 +23,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Verificar que el usuario puede usar este modo
+        // Verificar que el usuario puede usar este modo
     if (mode === 'vendedor') {
       const user = await getUserById(decoded.userId);
       if (!user.mode_unlocked) {
@@ -47,26 +46,18 @@ export async function POST(request: NextRequest) {
 
     // Guardar el mensaje del usuario
     await addMessage(convId, 'user', message, imageData?.preview || null);
-
-    // Formatear mensajes para Claude
+        // Formatear mensajes para Claude
     const claudeMessages = messages.map(m => ({
       role: m.role as 'user' | 'assistant',
-      content: [
-        { type: 'text' as const, text: m.content },
-        ...(m.image_url ? [{ type: 'image' as const, source: { type: 'base64' as const, media_type: 'image/jpeg', data: m.image_url } }] : [])
-      ]
+      content: m.content
     }));
 
     // Agregar el nuevo mensaje del usuario
     claudeMessages.push({
       role: 'user',
-      content: [
-        { type: 'text', text: message },
-        ...(imageData ? [{ type: 'image' as const, source: { type: 'base64' as const, media_type: imageData.mediaType, data: imageData.data } }] : [])
-      ]
+      content: message
     });
-
-    // Llamar a Claude
+        // Llamar a Claude
     const assistantResponse = await callClaude(claudeMessages, mode as 'practica' | 'vendedor');
 
     // Guardar la respuesta
@@ -82,7 +73,7 @@ export async function POST(request: NextRequest) {
         { role: 'assistant', content: assistantResponse, id: Date.now() + 1 }
       ]
     });
-  } catch (error) {
+      } catch (error) {
     console.error('Chat error:', error);
     return NextResponse.json(
       { error: 'Error al procesar el mensaje' },
@@ -106,8 +97,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const mode = url.searchParams.get('mode');
     const conversationId = url.searchParams.get('conversationId');
-
-    if (conversationId) {
+        if (conversationId) {
       const messages = await getConversationMessages(parseInt(conversationId));
       return NextResponse.json({ messages });
     }
