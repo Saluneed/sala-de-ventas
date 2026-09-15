@@ -11,43 +11,36 @@ const VENDEDOR_SYSTEM = `Sos un asistente de ventas para vendedores que están e
 Te van a pasar texto o capturas de pantalla de la conversación y tenés que ayudar a decidir cómo continuar: manejo de objeciones, tono cercano pero profesional, y cierre efectivo. 
 Si no tenés contexto suficiente, pedí más detalles antes de sugerir una respuesta. 
 Sé concreto: dá una o dos opciones de respuesta que el vendedor pueda usar tal cual o adaptar.`;
-interface MessageContent {
-  type: 'text' | 'image';
-  text?: string;
-  source?: {
-    type: string;
-    media_type: string;
-    data: string;
-  };
-}
-
-interface ClaudeMessage {
-  role: 'user' | 'assistant';
-  content: MessageContent[];
-}
 export async function callClaude(
-  messages: ClaudeMessage[],
+  messages: Array<{role: 'user' | 'assistant', content: string}>,
   mode: 'practica' | 'vendedor'
 ): Promise<string> {
   if (!CLAUDE_API_KEY) {
     throw new Error('CLAUDE_API_KEY not set');
   }
 
+  console.log('✓ API Key definida:', !!CLAUDE_API_KEY);
+  console.log('✓ API Key comienza con:', CLAUDE_API_KEY.substring(0, 5) + '...');
+
   const systemPrompt = mode === 'practica' ? PRACTICA_SYSTEM : VENDEDOR_SYSTEM;
+
+  const requestBody = {
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: messages,
+  };
+
+  console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
   const response = await fetch(CLAUDE_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-     'Authorization': `Bearer ${CLAUDE_API_KEY}`,
+      'Authorization': `Bearer ${CLAUDE_API_KEY}`,
       'anthropic-version': '2024-10-01',
     },
-    body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: messages,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
@@ -55,7 +48,8 @@ export async function callClaude(
     console.error('Claude API error response:', error);
     throw new Error(`Claude API error: ${JSON.stringify(error)}`);
   }
-    const data = await response.json();
+
+  const data = await response.json();
   console.log('Claude API response:', JSON.stringify(data));
 
   if (!data.content || !Array.isArray(data.content)) {
