@@ -39,8 +39,8 @@ export async function callClaude(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2024-06-01',
+     'Authorization': `Bearer ${CLAUDE_API_KEY}`,
+      'anthropic-version': '2024-10-01',
     },
     body: JSON.stringify({
       model: 'claude-3-5-sonnet-20241022',
