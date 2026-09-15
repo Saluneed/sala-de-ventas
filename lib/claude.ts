@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getContextForQuestion } from './knowledge-base';
 
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -11,6 +12,7 @@ const VENDEDOR_SYSTEM = `Sos un asistente de ventas para vendedores que están e
 Te van a pasar texto o capturas de pantalla de la conversación y tenés que ayudar a decidir cómo continuar: manejo de objeciones, tono cercano pero profesional, y cierre efectivo. 
 Si no tenés contexto suficiente, pedí más detalles antes de sugerir una respuesta. 
 Sé concreto: dá una o dos opciones de respuesta que el vendedor pueda usar tal cual o adaptar.`;
+
 export async function callClaude(
   messages: Array<{role: 'user' | 'assistant', content: string}>,
   mode: 'practica' | 'vendedor'
@@ -22,7 +24,14 @@ export async function callClaude(
   console.log('✓ API Key definida:', !!CLAUDE_API_KEY);
   console.log('✓ API Key comienza con:', CLAUDE_API_KEY.substring(0, 5) + '...');
 
-  const systemPrompt = mode === 'practica' ? PRACTICA_SYSTEM : VENDEDOR_SYSTEM;
+  let systemPrompt = mode === 'practica' ? PRACTICA_SYSTEM : VENDEDOR_SYSTEM;
+
+  // Si es modo VENDEDOR, agregar contexto de la base de conocimiento
+  if (mode === 'vendedor' && messages.length > 0) {
+    const lastUserMessage = messages[messages.length - 1]?.content || '';
+    const context = await getContextForQuestion(lastUserMessage);
+    systemPrompt += context;
+  }
 
   const requestBody = {
     model: 'claude-3-5-sonnet-20241022',
